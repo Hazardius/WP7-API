@@ -386,18 +386,20 @@ namespace DotNetMetroWikiaAPI
                 GetNewFilesListWrapper);
         }
 
-
+        /// <summary>Helper class. Remember the callback and file informations.</summary>
         public class DownloadImageClass
         {
-            private Action<byte[], FileInfo> callback;
+            private Action<WriteableBitmap, FileInfo> callback;
             private FileInfo file;
 
-            public DownloadImageClass(Action<byte[], FileInfo> callback, FileInfo file)
+            public DownloadImageClass(Action<WriteableBitmap, FileInfo> callback, FileInfo file)
             {
                 this.callback = callback;
                 this.file = file;
             }
 
+            /// <summary>Main function of the DownloadImageClass. Runs the download of
+            /// the file.</summary>
             public void DownloadImageProc()
             {
                 if (file.isImage())
@@ -409,22 +411,49 @@ namespace DotNetMetroWikiaAPI
             private void DownloadImageWrapper(IRestResponse response, params object[] args)
             {
                 byte[] imageData = response.RawBytes;
-                    Deployment.Current.Dispatcher.BeginInvoke(callback, imageData, file);
+                /// Running another method through Dispatcher, because you cannot create
+                /// WriteableBitmap objects in threads other than the main UI thread of
+                /// the application.
+                Deployment.Current.Dispatcher.BeginInvoke(new Action<byte[], FileInfo>
+                    (SaveImage), imageData, file);
+            }
+
+            /// <summary>Saves the byte array as a WriteableBitmap and returns it to
+            /// a callback.</summary>
+            /// <param name="diAsByteArray">Downloaded Image As Byte Array</param>
+            /// <param name="info">File informations</param>
+            private void SaveImage(byte[] diAsByteArray, FileInfo info)
+            {
+                using (Stream ms = new MemoryStream(diAsByteArray))
+                {
+                    WriteableBitmap downloadedImage = PictureDecoder.DecodeJpeg(ms);
+                    callback.DynamicInvoke(downloadedImage, info);
+                };
             }
         }
 
-        /// <summary>Download whole image and returns it as a WritableBitmap to the
+        /// <summary>Download whole image and returns it as a WriteableBitmap to the
         /// callback function.</summary>
         /// <param name="callback">Function which will be called after downloading the
         /// picture.</param>
-        /// <param name="file">FileInfo of the Picture.</param>
-        public static void DownloadImage(Action<byte[], FileInfo> callback, FileInfo file)
+        /// <param name="file">FileInfo of the picture. Must have the address.</param>
+        /// 
+        /// TODO: Find a way to make it in a C# 5.0 way - with await and async.
+        public static void DownloadImage(Action<WriteableBitmap, FileInfo> callback, FileInfo file)
         {
             DownloadImageClass dit = new DownloadImageClass(callback, file);
             Thread t = new Thread(new ThreadStart(dit.DownloadImageProc));
             t.Start();
         }
 
+        /// <summary>Gets the address of file and save it in FileInfo, then start the
+        /// callback.</summary>
+        /// <param name="callback">Method which will be runned after downloading the
+        /// address of the file.</param>
+        /// <param name="file">File which address you want to get.</param>
+        /// <param name="wikiname">Name of wikia from which is that file.</param>
+        /// 
+        /// TODO: Get rid of the wikiname. Why user should remember on which wiki is he?
         public async static Task GetAddressOfTheFile(Action callback, FileInfo file, string wikiname)
         {
             while (!isTempDelFree) { Thread.Sleep(2000); };
@@ -432,10 +461,6 @@ namespace DotNetMetroWikiaAPI
             isTempDelFree = false;
 
             int beginning = usedWiki.site.IndexOf(".wikia");
-
-            //usedWiki.GetPageHTM("http://" + wikiname + usedWiki.site.Substring(beginning)
-            //    + "/api.php?action=imageserving&wisId=" + file.GetFileID()
-            //    + "&format=xml", ReturnAddressOfTheFileWrapper, file);
 
             string content = await (new WebClient()).DownloadStringTaskAsync("http://"
                 + wikiname + usedWiki.site.Substring(beginning)

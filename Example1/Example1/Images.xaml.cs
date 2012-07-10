@@ -33,6 +33,7 @@ namespace Example1
             List<DotNetMetroWikiaAPI.Api.FileInfo>();
         /// <summary>Consist names and prefixes of 10 remembered wikis.</summary>
         public ObservableCollection<PairOfNames> TenWikias { get; set; }
+        public ObservableCollection<LastImage> LastImages { get; set; }
         private string prefix = "";
         private int tempCounter = 0;
 
@@ -183,15 +184,11 @@ namespace Example1
             }
         }
 
-        private void SaveImage(byte[] diAsByteArray, DotNetMetroWikiaAPI.Api.FileInfo info)
+        private void SaveImage(WriteableBitmap downloadedImage, DotNetMetroWikiaAPI.Api.FileInfo info)
         {
-            using (Stream ms = new MemoryStream(diAsByteArray))
-            {
-                WriteableBitmap downloadedImage = PictureDecoder.DecodeJpeg(ms);
-                TenImages.Add(info, downloadedImage);
-                backImageTEST.Source = downloadedImage;
-                tempCounter++;
-            };
+            TenImages.Add(info, downloadedImage);
+            backImageTEST.Source = downloadedImage;
+            tempCounter++;
             if (tempCounter == ListOfFiles.Count)
             {
                 Wikis.IsEnabled = true;
@@ -222,9 +219,10 @@ namespace Example1
             }
         }
 
-        private async void ListBoxItem_Tap(object sender, GestureEventArgs e)
+        private async void ListBoxItem_Tap(object sender, System.Windows.Input.GestureEventArgs e)
         {
             Wikis.IsEnabled = false;
+            TenImages.Clear();
             string name = ((TextBlock)((StackPanel)sender).Children.ElementAt(0)).Text;
             foreach (PairOfNames pon in TenWikias)
             {
@@ -237,11 +235,18 @@ namespace Example1
             await DotNetMetroWikiaAPI.Api.GetNewFilesListFromWiki(WholeListDownloaded, prefix, 10);
         }
 
-        private void Grid_DoubleTap(object sender, GestureEventArgs e)
+        private void Grid_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)
         {
             ImageProcessing.saveTopImagesAsTiles((Grid)sender, "/Images/1.jpg");
         }
 
+        /// <summary>Make application to remember that user is logged out. It's
+        /// a callback function.</summary>
+        /// <param name="e">Response from the server.</param>
+        /// <param name="sendData"></param>
+        /// 
+        /// TODO: Find out if it can be hidden inside an api and still be useable.
+        /// Btw. what is going on here?
         private void LogOut(IRestResponse e, string sendData)
         {
             isLogged = false;
