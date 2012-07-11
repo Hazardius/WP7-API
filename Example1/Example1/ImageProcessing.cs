@@ -17,8 +17,25 @@ namespace Example1
 {
     static public class ImageProcessing
     {
-        /// TODO: A lot!
-        
+        static public WriteableBitmap GetImageFromLastImage(LastImage li)
+        {
+            try
+            {
+                var image = li.Picture;
+                var avatar = li.Avatar;
+                var merge = new WriteableBitmap(178, 178);
+                merge.Clear(Colors.White);
+                merge.Blit(new Rect(0, 0, 178, 148), image, new Rect(0, 0, image.PixelWidth, image.PixelHeight));
+                merge.Blit(new Rect(0, 148, 30, 30), avatar, new Rect(0, 0, avatar.PixelWidth, avatar.PixelHeight));
+                return merge;
+            }
+            catch
+            {
+                /// TODO: Think about doing something with an Exception here.
+                return null;
+            }
+        }
+
         static public void saveTopImagesAsTiles(Grid target, string name)
         {
             try

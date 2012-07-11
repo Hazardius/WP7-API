@@ -26,9 +26,6 @@ namespace Example1
     {
         /// <summary>Is user logged into the wikia.com .</summary>
         static public bool isLogged = false;
-        private Dictionary<DotNetMetroWikiaAPI.Api.FileInfo, WriteableBitmap>
-            TenImages = new Dictionary<DotNetMetroWikiaAPI.Api.FileInfo,
-                WriteableBitmap>();
         private List<DotNetMetroWikiaAPI.Api.FileInfo> ListOfFiles = new
             List<DotNetMetroWikiaAPI.Api.FileInfo>();
         /// <summary>Consist names and prefixes of 10 remembered wikis.</summary>
@@ -43,6 +40,24 @@ namespace Example1
 
             DataContext = App.ViewModel;
             this.Loaded += new RoutedEventHandler(Images_Loaded);
+        }
+
+        private void GetLastImagesFromFiles()
+        {
+            LastImages = new ObservableCollection<LastImage>();
+
+            Pictures.ItemsSource = LastImages;
+
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
+            LastImages.Add(new LastImage());
         }
 
         /// <summary>Loads dictionary of Ten Wikias into the application. If it's first
@@ -105,8 +120,8 @@ namespace Example1
                 TenWikias[0].PrefixOfWiki = "glee";
                 TenWikias[1].NameOfWiki = "BATTLEFIELD WIKI";
                 TenWikias[1].PrefixOfWiki = "battlefield";
-                TenWikias[2].NameOfWiki = "animepedia";
-                TenWikias[2].PrefixOfWiki = "anime";
+                TenWikias[2].NameOfWiki = "Wiedźmińska Wiki";
+                TenWikias[2].PrefixOfWiki = "wiedzmin";
                 TenWikias[3].NameOfWiki = "Logopedia";
                 TenWikias[3].PrefixOfWiki = "logos";
                 TenWikias[4].NameOfWiki = "Academic Jobs";
@@ -155,6 +170,7 @@ namespace Example1
             }
 
             GetTenWikisFromFile();
+            GetLastImagesFromFiles();
         }
 
         private void Pivot_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -169,9 +185,10 @@ namespace Example1
                 {
                     StandardTileData tile = new StandardTileData();
 
-                    tile.BackgroundImage = new Uri("/Images/1.jpg", UriKind.Relative);
+                    /// TODO: Get images from IsolatedStorage to the Tile of app
+                    tile.BackgroundImage = new Uri("1.jpg");
                     //tile.Title = "Test";
-                    tile.BackBackgroundImage = new Uri("/Images/2.jpg", UriKind.Relative);
+                    tile.BackBackgroundImage = new Uri("2.jpg");
                     //tile.BackTitle = "App";
                     //tile.BackContent = "Content";
 
@@ -186,9 +203,12 @@ namespace Example1
 
         private void SaveImage(WriteableBitmap downloadedImage, DotNetMetroWikiaAPI.Api.FileInfo info)
         {
-            TenImages.Add(info, downloadedImage);
-            backImageTEST.Source = downloadedImage;
+            LastImage li = new LastImage();
+            LastImages[tempCounter] = li;
+            li.Picture = downloadedImage;
+            li.Subtitle = info.ToString();
             tempCounter++;
+            li.Number = tempCounter;
             if (tempCounter == ListOfFiles.Count)
             {
                 Wikis.IsEnabled = true;
@@ -222,7 +242,7 @@ namespace Example1
         private async void ListBoxItem_Tap(object sender, System.Windows.Input.GestureEventArgs e)
         {
             Wikis.IsEnabled = false;
-            TenImages.Clear();
+            //LastImages.Clear();
             string name = ((TextBlock)((StackPanel)sender).Children.ElementAt(0)).Text;
             foreach (PairOfNames pon in TenWikias)
             {
@@ -235,9 +255,10 @@ namespace Example1
             await DotNetMetroWikiaAPI.Api.GetNewFilesListFromWiki(WholeListDownloaded, prefix, 10);
         }
 
-        private void Grid_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)
+        private void Image_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)
         {
-            ImageProcessing.saveTopImagesAsTiles((Grid)sender, "/Images/1.jpg");
+            bigPicture.Source = LastImages[((ListBox)sender).SelectedIndex].Picture;
+            //ImageProcessing.saveTopImagesAsTiles((Grid)sender, "/Images/1.jpg");
         }
 
         /// <summary>Make application to remember that user is logged out. It's

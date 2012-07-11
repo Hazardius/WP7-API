@@ -859,6 +859,7 @@ namespace DotNetMetroWikiaAPI
                         {
                             foreach (RestSharp.RestResponseCookie buiscuit in responce.Cookies)
                             {
+                                /// TODO: Find out why wiedzmin.wikia.com isn't working properly.
                                 cookies.Add(new Uri(pageURL), new Cookie(buiscuit.Name, buiscuit.Value, buiscuit.Path, buiscuit.Domain));
                             }
                             callback(responce.Content, args);
