@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using System.IO.IsolatedStorage;
 using System.IO;
+using System.Collections.ObjectModel;
 
 namespace Example1
 {
@@ -26,7 +27,6 @@ namespace Example1
             {  
                 using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())  
                 {
-                    /// "Images" + System.IO.Path.DirectorySeparatorChar
                     if (isoStore.FileExists(ImageName))  
                     {  
                         BitmapImage bitMapImage = new BitmapImage();  
@@ -47,6 +47,69 @@ namespace Example1
             }
         }
 
+        public static void SortByDate(ObservableCollection<LastImage> list)
+        {
+            //Bubble sort.
+            for (int time = list.Count - 1; time > 0; time--)
+            {
+                for (int bubble = 0; bubble < time; bubble++)
+                {
+                    if (list[bubble].PubTime.CompareTo(list[bubble + 1].PubTime) > 0)
+                    {
+                        LastImage temp = list[bubble];
+                        int tempW = list[bubble]._Picture_Width;
+                        int tempH = list[bubble]._Picture_Height;
+                        WriteableBitmap tempPicture = 
+                        list[bubble] = list[bubble + 1];
+                        list[bubble].Number = bubble + 1;
+                        list[bubble]._Picture_Height = list[bubble + 1]._Picture_Height;
+                        list[bubble]._Picture_Width = list[bubble + 1]._Picture_Width;
+                        list[bubble].Picture = list[bubble + 1].Picture;
+                        list[bubble+1] = temp;
+                        list[bubble+1].Number = bubble;
+                        list[bubble+1]._Picture_Height = tempH;
+                        list[bubble+1]._Picture_Width = tempW;
+                        list[bubble+1].Picture = tempPicture;
+                    }
+                }
+            }
+        }
+
+        private DateTime _PubTime;
+        public DateTime PubTime
+        {
+            get
+            {
+                return _PubTime;
+            }
+            set
+            {
+                _PubTime = value;
+            }
+        }
+
+        private void LoadPicture()
+        {
+            string BigName = _ImageName + ".big";
+            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                if (isoStore.FileExists(BigName))
+                {
+                    if (_Picture_Width != -1)
+                        _Picture = new WriteableBitmap(_Picture_Width, _Picture_Height);
+                    else
+                        _Picture = new WriteableBitmap(512, 512);
+                    _Picture.Clear(Colors.Red);
+                    using (IsolatedStorageFileStream fileStream = isoStore.OpenFile(@BigName, FileMode.Open, FileAccess.Read))
+                    {
+                        _Picture.LoadJpeg(fileStream);
+                    }
+                }
+                else
+                    _Picture = null;
+            }  
+        }
+
         private int _Number = 0;
         public int Number
         {
@@ -55,14 +118,14 @@ namespace Example1
                 _Number = value;
                 ImageName = _Number + ".jpg";
                 NotifyPropertyChanged("Number");
-                if (_Number != 0)
+                if ((_Number != 0) && (_Picture != null))
                 {
                     TileImage = new BitmapImage();
                 }
             }
         }
 
-        private string _ImageName = "0.jpg";
+        private string _ImageName = "Shared/ShellContent/0.jpg";
         public string ImageName
         {
             get
@@ -78,23 +141,27 @@ namespace Example1
             }
             set
             {
-                _ImageName = value;
+                _ImageName = "Shared/ShellContent/" + value;
                 NotifyPropertyChanged("ImageName");
             }
         }
 
-        private WriteableBitmap _Picture = new WriteableBitmap(143, 173);
+        private int _Picture_Width = -1;
+        private int _Picture_Height = -1;
+        private WriteableBitmap _Picture = null;
         public WriteableBitmap Picture
         {
             get
             {
+                LoadPicture();
                 return _Picture;
             }
             set
             {
                 _Picture = value;
+                SavePicture();
                 NotifyPropertyChanged("Picture");
-                if (_Number != 0)
+                if ((_Number != 0) && (_Picture != null))
                 {
                     TileImage = new BitmapImage();
                 }
@@ -112,7 +179,7 @@ namespace Example1
             {
                 _Avatar = value;
                 NotifyPropertyChanged("Avatar");
-                if (_Number != 0)
+                if ((_Number != 0) && (_Picture != null))
                 {
                     TileImage = new BitmapImage();
                 }
@@ -130,7 +197,7 @@ namespace Example1
             {
                 _Subtitle = value;
                 NotifyPropertyChanged("Subtitle");
-                if (_Number != 0)
+                if ((_Number != 0)&&(_Picture != null))
                 {
                     TileImage = new BitmapImage();
                 }
@@ -146,7 +213,22 @@ namespace Example1
                 using (IsolatedStorageFileStream isoStream = isoStore.CreateFile(@ImageName))
                 {
                     Extensions.SaveJpeg(ImageProcessing.GetImageFromLastImage(this), isoStream, 173, 173, 0, 100);
-                    //ImageProcessing.GetImageFromLastImage(this).SaveJpeg(isoStream, 173, 173, 0, 100);
+                }
+            }
+        }
+
+        private void SavePicture()
+        {
+            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                string BigName = _ImageName + ".big";
+                if (isoStore.FileExists(BigName))
+                    isoStore.DeleteFile(BigName);
+                using (IsolatedStorageFileStream isoStream = isoStore.CreateFile(BigName))
+                {
+                    _Picture_Width = _Picture.PixelWidth;
+                    _Picture_Height = _Picture.PixelHeight;
+                    Extensions.SaveJpeg(_Picture, isoStream, _Picture_Width, _Picture_Height, 0, 100);
                 }
             }
         }

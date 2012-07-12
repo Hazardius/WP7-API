@@ -22,35 +22,30 @@ namespace Example1
             try
             {
                 var image = li.Picture;
-                var avatar = li.Avatar;
-                var merge = new WriteableBitmap(178, 178);
-                merge.Clear(Colors.White);
-                merge.Blit(new Rect(0, 0, 178, 148), image, new Rect(0, 0, image.PixelWidth, image.PixelHeight));
-                merge.Blit(new Rect(0, 148, 30, 30), avatar, new Rect(0, 0, avatar.PixelWidth, avatar.PixelHeight));
+                //var avatar = li.Avatar;
+                var text = li.Subtitle;
+                var merge = new WriteableBitmap(173, 173);
+                merge.Clear(Colors.Red);
+                int smallSizeW, smallSizeH;
+                if (image.PixelWidth > image.PixelHeight)
+                {
+                    smallSizeW = 173;
+                    smallSizeH = (173 * image.PixelHeight) / image.PixelWidth;
+                }
+                else
+                {
+                    smallSizeW = (173 * image.PixelWidth) / image.PixelHeight;
+                    smallSizeH = 173;
+                }
+                merge.Blit(new Rect((173 - smallSizeW)/2, 173 - smallSizeH, smallSizeW, smallSizeH), image, new Rect(0, 0, image.PixelWidth, image.PixelHeight));
+                //merge.Blit(new Rect(0, 148, 30, 30), avatar, new Rect(0, 0, avatar.PixelWidth, avatar.PixelHeight));
                 return merge;
             }
-            catch
+            catch (Exception e)
             {
+                e.ToString();
                 /// TODO: Think about doing something with an Exception here.
                 return null;
-            }
-        }
-
-        static public void saveTopImagesAsTiles(Grid target, string name)
-        {
-            try
-            {
-                IsolatedStorageFile isf = IsolatedStorageFile.GetUserStoreForApplication();
-                System.Windows.Media.Imaging.WriteableBitmap wb = new System.Windows.Media.Imaging.WriteableBitmap(target, null);
-                isf.DeleteFile(name);
-                using (IsolatedStorageFileStream rawStream = isf.CreateFile(name))
-                {
-                    wb.SaveJpeg(rawStream, wb.PixelWidth, wb.PixelHeight, 0, 100);
-                }
-            }
-            catch
-            {
-                Thread.Sleep(2000);
             }
         }
     }

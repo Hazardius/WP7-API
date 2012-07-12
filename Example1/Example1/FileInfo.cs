@@ -170,6 +170,16 @@ namespace DotNetMetroWikiaAPI
                 return addressOfFile;
             }
 
+            public DateTime GetTime()
+            {
+                return pubDate;
+            }
+
+            public string GetUsername()
+            {
+                return byUsername;
+            }
+
             public void SetByUsername(string username)
             {
                 byUsername = username;

@@ -51,7 +51,7 @@
                 <ListBox x:Name="Pictures" ItemsSource="{Binding}" HorizontalAlignment="Center" VerticalAlignment="Top" Width="400" DoubleTap="Image_DoubleTap">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
-                            <toolkit:WrapPanel ItemWidth="173" ItemHeight="173"/>
+                            <toolkit:WrapPanel ItemHeight="173" ItemWidth="173"/>
                         </ItemsPanelTemplate>
                     </ListBox.ItemsPanel>
                     <ListBox.ItemTemplate>
@@ -67,7 +67,8 @@
             <!--Pivot item three-->
             <controls:PivotItem Header="Big Picture">
                 <Grid>
-                    <Image Height="Auto" HorizontalAlignment="Center" Margin="0,0,0,0" Name="bigPicture" Stretch="Fill" VerticalAlignment="Center"/>
+                    <Image Height="440" Width="440" HorizontalAlignment="Center" Margin="0,0,0,0" Name="bigPicture" Stretch="Uniform" VerticalAlignment="Center"/>
+                    <TextBlock Height="30" HorizontalAlignment="Center" Margin="0,10,0,0" Name="TextOfImage" Text="" VerticalAlignment="Top" Width="440" TextAlignment="Center" />
                 </Grid>
             </controls:PivotItem>
         </controls:Pivot>

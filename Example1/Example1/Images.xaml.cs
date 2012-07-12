@@ -58,6 +58,18 @@ namespace Example1
             LastImages.Add(new LastImage());
             LastImages.Add(new LastImage());
             LastImages.Add(new LastImage());
+            for (int i = 0; i < 10; i++)
+            {
+                IsolatedStorageFile isf = IsolatedStorageFile.GetUserStoreForApplication();
+                /// TODO: TUTAJ KURDE
+                if (isf.FileExists("Shared/ShellContent/" + (i + 1) + ".jpg"))
+                {
+                    LastImages[i].Number = i + 1;
+                    WriteableBitmap downloadedImage = LastImages[i].Picture;
+                    LastImages[i].Picture = downloadedImage;
+                    LastImages[i].Subtitle = "Temp " + (i + 1);
+                }
+            }
         }
 
         /// <summary>Loads dictionary of Ten Wikias into the application. If it's first
@@ -185,10 +197,10 @@ namespace Example1
                 {
                     StandardTileData tile = new StandardTileData();
 
-                    /// TODO: Get images from IsolatedStorage to the Tile of app
-                    tile.BackgroundImage = new Uri("1.jpg");
-                    //tile.Title = "Test";
-                    tile.BackBackgroundImage = new Uri("2.jpg");
+                    if (IsolatedStorageFile.GetUserStoreForApplication().FileExists("Shared/ShellContent/1.jpg"))
+                        tile.BackgroundImage = new Uri("isostore:/Shared/ShellContent/1.jpg");
+                    tile.Title = "";
+                    tile.BackBackgroundImage = new Uri("isostore:/Shared/ShellContent/2.jpg");
                     //tile.BackTitle = "App";
                     //tile.BackContent = "Content";
 
@@ -205,12 +217,14 @@ namespace Example1
         {
             LastImage li = new LastImage();
             LastImages[tempCounter] = li;
+            li.PubTime = info.GetTime();
+            li.Number = tempCounter + 1;
             li.Picture = downloadedImage;
-            li.Subtitle = info.ToString();
+            li.Subtitle = info.GetUsername() + " " + DateProcessing.HowLongAgo(info.GetTime());
             tempCounter++;
-            li.Number = tempCounter;
             if (tempCounter == ListOfFiles.Count)
             {
+                LastImage.SortByDate(LastImages);
                 Wikis.IsEnabled = true;
             }
         }
@@ -257,8 +271,12 @@ namespace Example1
 
         private void Image_DoubleTap(object sender, System.Windows.Input.GestureEventArgs e)
         {
-            bigPicture.Source = LastImages[((ListBox)sender).SelectedIndex].Picture;
-            //ImageProcessing.saveTopImagesAsTiles((Grid)sender, "/Images/1.jpg");
+            int index = ((ListBox)sender).SelectedIndex;
+            if (index >= 0)
+            {
+                bigPicture.Source = LastImages[index].Picture;
+                TextOfImage.Text = LastImages[index].Subtitle;
+            }
         }
 
         /// <summary>Make application to remember that user is logged out. It's

@@ -437,8 +437,6 @@ namespace DotNetMetroWikiaAPI
         /// <param name="callback">Function which will be called after downloading the
         /// picture.</param>
         /// <param name="file">FileInfo of the picture. Must have the address.</param>
-        /// 
-        /// TODO: Find a way to make it in a C# 5.0 way - with await and async.
         public static void DownloadImage(Action<WriteableBitmap, FileInfo> callback, FileInfo file)
         {
             DownloadImageClass dit = new DownloadImageClass(callback, file);
