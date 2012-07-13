@@ -61,13 +61,14 @@ namespace Example1
             for (int i = 0; i < 10; i++)
             {
                 IsolatedStorageFile isf = IsolatedStorageFile.GetUserStoreForApplication();
-                /// TODO: TUTAJ KURDE
                 if (isf.FileExists("Shared/ShellContent/" + (i + 1) + ".jpg"))
                 {
                     LastImages[i].Number = i + 1;
                     WriteableBitmap downloadedImage = LastImages[i].Picture;
                     LastImages[i].Picture = downloadedImage;
-                    LastImages[i].Subtitle = "Temp " + (i + 1);
+                    WriteableBitmap avatar = LastImages[i].Avatar;
+                    LastImages[i].Avatar = avatar;
+                    LastImages[i].Subtitle = "Temp\n" + (i + 1);
                 }
             }
         }
@@ -201,7 +202,7 @@ namespace Example1
                         tile.BackgroundImage = new Uri("isostore:/Shared/ShellContent/1.jpg");
                     tile.Title = "";
                     tile.BackBackgroundImage = new Uri("isostore:/Shared/ShellContent/2.jpg");
-                    //tile.BackTitle = "App";
+                    tile.BackTitle = "";
                     //tile.BackContent = "Content";
 
                     PrimaryTile.Update(tile);
@@ -213,19 +214,35 @@ namespace Example1
             }
         }
 
-        private void SaveImage(WriteableBitmap downloadedImage, DotNetMetroWikiaAPI.Api.FileInfo info)
+        private void SaveAvatar(WriteableBitmap avatar, DotNetMetroWikiaAPI.Api.FileInfo info)
         {
-            LastImage li = new LastImage();
-            LastImages[tempCounter] = li;
-            li.PubTime = info.GetTime();
-            li.Number = tempCounter + 1;
-            li.Picture = downloadedImage;
-            li.Subtitle = info.GetUsername() + " " + DateProcessing.HowLongAgo(info.GetTime());
             tempCounter++;
+
+            int myNr = ListOfFiles.IndexOf(info);
+            LastImages[myNr].Avatar = avatar;
+
             if (tempCounter == ListOfFiles.Count)
             {
-                LastImage.SortByDate(LastImages);
+                //LastImage.SortByDate(LastImages);
                 Wikis.IsEnabled = true;
+            }
+        }
+
+        private void SaveImage(WriteableBitmap downloadedImage, DotNetMetroWikiaAPI.Api.FileInfo info)
+        {
+            int myNr = ListOfFiles.IndexOf(info);
+            LastImages[myNr].PubTime = info.GetTime();
+            LastImages[myNr].Number = myNr + 1;
+            LastImages[myNr].Picture = downloadedImage;
+            LastImages[myNr].Subtitle = info.GetUsername() + "\n" + DateProcessing.HowLongAgo(info.GetTime());
+
+            try
+            {
+                DotNetMetroWikiaAPI.Api.DownloadAvatar(SaveAvatar, info);
+            }
+            catch (Exception e)
+            {
+                return;
             }
         }
 
@@ -237,7 +254,17 @@ namespace Example1
                 tempCounter = 0;
                 foreach (DotNetMetroWikiaAPI.Api.FileInfo fi in ListOfFiles)
                 {
-                    DotNetMetroWikiaAPI.Api.DownloadImage(SaveImage, fi);
+                    try
+                    {
+                        DotNetMetroWikiaAPI.Api.DownloadImage(SaveImage, fi);
+                    }
+                    catch (FormatException e)
+                    {
+                        if (e.Message == "Wrong format of file!")
+                        {
+                            tempCounter++;
+                        }
+                    }
                 }
             }
         }

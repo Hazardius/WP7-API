@@ -155,6 +155,18 @@ namespace DotNetMetroWikiaAPI
                 return false;
             }
 
+            public static bool isImage(string address)
+            {
+                if (address.EndsWith(".jpg") || address.EndsWith(".png") || address
+                    .EndsWith(".gif") || address.EndsWith(".jpeg") || address
+                    .EndsWith(".JPG") || address.EndsWith(".PNG") || address
+                    .EndsWith(".GIF") || address.EndsWith(".JPEG"))
+                {
+                    return true;
+                }
+                return false;
+            }
+
             public string GetFilename()
             {
                 return filename;

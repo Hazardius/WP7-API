@@ -342,8 +342,11 @@ namespace DotNetMetroWikiaAPI
                 } while ((reader.ReadToFollowing("title")) && (counter < tempInt));
                 tempInt = counter;
                 reader.Close();
+
+                string fileName = files[0].GetFilename().Replace("&", "%26");
+
                 usedWiki.GetPageHTM(tempAddress + "/api.php?action=query&titles=File:"
-                    + files[0].GetFilename() + "&prop=imageinfo&format=xml",
+                    + fileName + "&prop=imageinfo&format=xml",
                     ReturnNewFilesListWrapper, files, 0);
 
                 /// TODO: Cross recurrent to download address of file.
@@ -390,22 +393,55 @@ namespace DotNetMetroWikiaAPI
         public class DownloadImageClass
         {
             private Action<WriteableBitmap, FileInfo> callback;
+            private Action<WriteableBitmap> altCallback;
             private FileInfo file;
+            private string address = null;
+
+            public DownloadImageClass(Action<WriteableBitmap, FileInfo> callback, string address, FileInfo file)
+            {
+                if (file.isImage())
+                {
+                    this.file = file;
+                    this.callback = callback;
+                    this.address = address;
+                }
+                else
+                    throw new FormatException("Wrong format of file!");
+            }
 
             public DownloadImageClass(Action<WriteableBitmap, FileInfo> callback, FileInfo file)
             {
-                this.callback = callback;
-                this.file = file;
+                if (file.isImage())
+                {
+                    this.callback = callback;
+                    this.file = file;
+                }
+                else
+                    throw new FormatException("Wrong format of file!");
             }
 
             /// <summary>Main function of the DownloadImageClass. Runs the download of
             /// the file.</summary>
             public void DownloadImageProc()
             {
-                if (file.isImage())
+                if (address == null)
                 {
                     usedWiki.GetPageHTM(file.GetAddressOfFile(), DownloadImageWrapper);
                 }
+                else
+                {
+                    usedWiki.GetPageHTM(address, DownloadAltImageWrapper);
+                }
+            }
+
+            private void DownloadAltImageWrapper(IRestResponse response, params object[] args)
+            {
+                byte[] imageData = response.RawBytes;
+                /// Running another method through Dispatcher, because you cannot create
+                /// WriteableBitmap objects in threads other than the main UI thread of
+                /// the application.
+                Deployment.Current.Dispatcher.BeginInvoke(new Action<byte[], FileInfo>
+                    (SaveImage), imageData, file);
             }
 
             private void DownloadImageWrapper(IRestResponse response, params object[] args)
@@ -430,6 +466,29 @@ namespace DotNetMetroWikiaAPI
                     callback.DynamicInvoke(downloadedImage, info);
                 };
             }
+        }
+
+        public async static void DownloadAvatar(Action<WriteableBitmap, FileInfo>
+            callback, FileInfo file)
+        {
+            string username = file.GetUsername();
+            username = username.Replace(' ', '_');
+
+            string content = await (new WebClient()).DownloadStringTaskAsync("http://community." + usedWiki.site.Substring(11) + "/wiki/Special:Contributions/" + username);
+            StringReader reader = new StringReader(content);
+            string line = "";
+            do
+            {
+                line = reader.ReadLine();
+            } while (!line.Contains("<div class=\"masthead-avatar\">"));
+            line = reader.ReadLine();
+            int beginning = line.IndexOf("http://");
+            int end = line.IndexOf("\" itemprop");
+            line = line.Substring(beginning, end - beginning);
+
+            DownloadImageClass dit = new DownloadImageClass(callback, line, file);
+            Thread t = new Thread(new ThreadStart(dit.DownloadImageProc));
+            t.Start();
         }
 
         /// <summary>Download whole image and returns it as a WriteableBitmap to the

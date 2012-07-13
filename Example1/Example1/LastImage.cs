@@ -47,6 +47,7 @@ namespace Example1
             }
         }
 
+        /// TODO: Make it work! Probably by merging informations stored in the LastImages and FileInfos
         public static void SortByDate(ObservableCollection<LastImage> list)
         {
             //Bubble sort.
@@ -59,7 +60,7 @@ namespace Example1
                         LastImage temp = list[bubble];
                         int tempW = list[bubble]._Picture_Width;
                         int tempH = list[bubble]._Picture_Height;
-                        WriteableBitmap tempPicture = 
+                        //WriteableBitmap tempPicture = ;
                         list[bubble] = list[bubble + 1];
                         list[bubble].Number = bubble + 1;
                         list[bubble]._Picture_Height = list[bubble + 1]._Picture_Height;
@@ -69,7 +70,7 @@ namespace Example1
                         list[bubble+1].Number = bubble;
                         list[bubble+1]._Picture_Height = tempH;
                         list[bubble+1]._Picture_Width = tempW;
-                        list[bubble+1].Picture = tempPicture;
+                        //list[bubble+1].Picture = tempPicture;
                     }
                 }
             }
@@ -86,28 +87,6 @@ namespace Example1
             {
                 _PubTime = value;
             }
-        }
-
-        private void LoadPicture()
-        {
-            string BigName = _ImageName + ".big";
-            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
-            {
-                if (isoStore.FileExists(BigName))
-                {
-                    if (_Picture_Width != -1)
-                        _Picture = new WriteableBitmap(_Picture_Width, _Picture_Height);
-                    else
-                        _Picture = new WriteableBitmap(512, 512);
-                    _Picture.Clear(Colors.Red);
-                    using (IsolatedStorageFileStream fileStream = isoStore.OpenFile(@BigName, FileMode.Open, FileAccess.Read))
-                    {
-                        _Picture.LoadJpeg(fileStream);
-                    }
-                }
-                else
-                    _Picture = null;
-            }  
         }
 
         private int _Number = 0;
@@ -168,16 +147,40 @@ namespace Example1
             }
         }
 
-        private WriteableBitmap _Avatar = new WriteableBitmap(30, 30);
+        private void LoadPicture()
+        {
+            string BigName = _ImageName + ".big";
+            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                if (isoStore.FileExists(BigName))
+                {
+                    if (_Picture_Width != -1)
+                        _Picture = new WriteableBitmap(_Picture_Width, _Picture_Height);
+                    else
+                        _Picture = new WriteableBitmap(512, 512);
+                    _Picture.Clear(Colors.Red);
+                    using (IsolatedStorageFileStream fileStream = isoStore.OpenFile(@BigName, FileMode.Open, FileAccess.Read))
+                    {
+                        _Picture.LoadJpeg(fileStream);
+                    }
+                }
+                else
+                    _Picture = null;
+            }
+        }
+
+        private WriteableBitmap _Avatar = new WriteableBitmap(50, 50);
         public WriteableBitmap Avatar
         {
             get
             {
+                LoadAvatar();
                 return _Avatar;
             }
             set
             {
                 _Avatar = value;
+                SaveAvatar();
                 NotifyPropertyChanged("Avatar");
                 if ((_Number != 0) && (_Picture != null))
                 {
@@ -186,7 +189,29 @@ namespace Example1
             }
         }
 
-        private string _Subtitle = "Unknown - Unknown";
+        private void LoadAvatar()
+        {
+            string AvName = _ImageName + ".ava";
+            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                if (isoStore.FileExists(AvName))
+                {
+                    _Avatar = new WriteableBitmap(50, 50);
+                    _Avatar.Clear(Colors.Red);
+                    using (IsolatedStorageFileStream fileStream = isoStore.OpenFile(@AvName, FileMode.Open, FileAccess.Read))
+                    {
+                        _Avatar.LoadJpeg(fileStream);
+                    }
+                }
+                else
+                {
+                    _Avatar = new WriteableBitmap(50, 50);
+                    _Avatar.Clear(Colors.Yellow);
+                }
+            }
+        }
+
+        private string _Subtitle = "Unknown\nUnknown";
         public string Subtitle
         {
             get
@@ -229,6 +254,20 @@ namespace Example1
                     _Picture_Width = _Picture.PixelWidth;
                     _Picture_Height = _Picture.PixelHeight;
                     Extensions.SaveJpeg(_Picture, isoStream, _Picture_Width, _Picture_Height, 0, 100);
+                }
+            }
+        }
+
+        private void SaveAvatar()
+        {
+            using (IsolatedStorageFile isoStore = IsolatedStorageFile.GetUserStoreForApplication())
+            {
+                string AvName = _ImageName + ".ava";
+                if (isoStore.FileExists(AvName))
+                    isoStore.DeleteFile(AvName);
+                using (IsolatedStorageFileStream isoStream = isoStore.CreateFile(AvName))
+                {
+                    Extensions.SaveJpeg(_Avatar, isoStream, 50, 50, 0, 100);
                 }
             }
         }

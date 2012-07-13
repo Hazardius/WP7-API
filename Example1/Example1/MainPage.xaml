@@ -29,9 +29,9 @@
         <!--ContentPanel - place additional content here-->
         <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
             <TextBlock Height="30" HorizontalAlignment="Left" Margin="6,6,0,0" Name="textBlock1" Text="Username:" VerticalAlignment="Top" />
-            <TextBox Height="72" HorizontalAlignment="Left" Margin="0,42,0,0" Name="textBox1" Text="" VerticalAlignment="Top" Width="456" />
+            <TextBox Height="72" HorizontalAlignment="Left" Margin="0,42,0,0" Name="textBox1" Text="hazardius" VerticalAlignment="Top" Width="456" />
             <TextBlock Height="30" HorizontalAlignment="Left" Margin="6,120,0,0" Name="textBlock2" Text="Password" VerticalAlignment="Top" />
-            <PasswordBox Height="72" HorizontalAlignment="Left" Margin="0,156,0,0" Name="passwordBox1" VerticalAlignment="Top" Width="456" />
+            <PasswordBox Height="72" HorizontalAlignment="Left" Margin="0,156,0,0" Name="passwordBox1" VerticalAlignment="Top" Width="456" Password="roxette" />
             <Button Content="Proceed" Height="72" HorizontalAlignment="Left" Margin="296,234,0,0" Name="button1" VerticalAlignment="Top" Width="160" Click="button1_Click" DataContext="{Binding}" />
             <TextBlock Height="30" HorizontalAlignment="Left" Margin="34,310,34,0" Name="textBlock3" Text="Wrong username and/or password!" VerticalAlignment="Top" FontSize="22" FontFamily="Segoe WP Black" TextAlignment="Center" FontWeight="Normal" Foreground="Red" Visibility="Collapsed"></TextBlock>
         </Grid>
