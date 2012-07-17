@@ -50,17 +50,17 @@ namespace Example1
                 /// TODO: Find way to cut out a part of image.
                 if (image.PixelHeight * 173 > image.PixelWidth * 115)
                 {
-                    smallSizeW = 173;
-                    smallSizeH = (173 * image.PixelHeight) / image.PixelWidth;
+                    smallSizeW = (image.PixelWidth * 115) / 173;
+                    smallSizeH = (image.PixelHeight - smallSizeW) / 2;
                     merge.Blit(new Rect(0, 0, 173, 115),
-                        image, new Rect(0, image.PixelHeight, image.PixelWidth, smallSizeH));
+                        image, new Rect(0, smallSizeH, image.PixelWidth, smallSizeW));
                 }
                 else
                 {
-                    smallSizeH = 115;
-                    smallSizeW = (115 * image.PixelWidth) / image.PixelHeight;
+                    smallSizeH = (image.PixelHeight * 173) / 115;
+                    smallSizeW = (image.PixelWidth - smallSizeH) / 2;
                     merge.Blit(new Rect(0, 0, 173, 115),
-                        image, new Rect(image.PixelWidth, 0, smallSizeW, image.PixelHeight));
+                        image, new Rect(smallSizeW, 0, smallSizeH, image.PixelHeight));
                 }
 
                 var blackRect = new WriteableBitmap(1, 1);
